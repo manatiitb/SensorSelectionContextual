@@ -1,0 +1,66 @@
+%!TEX root =  main.tex
+\vspace{-7pt}
+Let $\TSA$ be the set of all stochastic, cascaded sensor acquisition problems. 
+Thus, $\theta \in \TSA$ such that if $Y\sim \theta$ then $\gamma_k(\theta):=\Prob{Y\ne Y^k}$ 
+is a decreasing sequence.
+Given a subset $\Theta\subset \TSA$, we say that $\Theta$ is \emph{learnable} 
+if there exists a learning algorithm $\Alg$ such that
+for any $\theta\in \Theta$, the expected regret $\EE{ \Regret_n(\Alg,\theta) }$ 
+of algorithm $\Alg$ on instance $\theta$ is sublinear.
+A subset $\Theta$ is said to be a maximal learnable problem class if it is learnable and for any $\Theta'\subset \TSA$ superset
+of $\Theta$, $\Theta'$ is not learnable.
+
+\begin{defi}[Weak Dominance (WD)]
+	An instance $\theta \in \TSA$  is said to satisfy the \emph{weak dominance,  property} if 
+	for $i = a^*(\theta)$,
+	\begin{align}
+	\label{eq:wd} \rho = \min_{j > i} \frac{C_j - C_i}{\Prob{Y^i\ne Y^j}} \ge 1 %\forall j>i\,\,: \,\, C_j - C_i \ge \Prob{Y^i\ne Y^j}\,.
+	\end{align}
+We denote the set of all instances in $\TSA$ that satisfies this condition by $\TWD$.	
+\end{defi}
+\begin{thm}
+The set $\TWD$ is essentially a maximal learnable set.
+\end{thm}
+
+Define a set $\mathcal{A}$ as follows:
+
+\begin{align*}
+\mathcal{A} =\bigg\{ i \in [K]:\, \forall j<i \,\,:\,\, C_i - C_j < \Prob{ Y^i \ne Y^j }\, \\
+\mbox{  and  }\forall j>i \,\,:\,\, C_j - C_i \ge \Prob{ Y^i \ne Y^j }
+\bigg \}\enspace.
+\end{align*}
+
+\begin{lem}
+Let the WD conditions holds. Then the set $\mathcal{A}$ contains an optimal action, and it is a singleton set.
+\end{lem}
+\begin{proof}
+It is clear that under WD property $\mathcal{A}$ contains an optimal action. We prove the second part by contradiction.  Assume that $i_1^\star, i_2^\star \in \mathcal{A}$ and $i_1^\star \neq i_2^\star$. WLOG, assume that $i_1^\star < i_2^*$. Since $i^\star_1 \in \mathcal{A}$, we have   $C_{j_1} - C_{i^\star_1} \ge \Prob{ Y^{i^\star_1} \ne Y^{j_1 }}$ for all $i_1^\star < j_1$. Also, since $i^\star_2 \in \mathcal{A}$, we have  $C_{i^\star_2} - C_{j_2 }< \Prob{ Y^{i^\star_2} \ne Y^{j_2} }$ for all $j_2 < i^\star_2$. 
+
+Now, setting $j_1=i_2^\star$ and $j_2=i_1^\star$ above, we get    $C_{i_2^\star} - C_{i^\star_1} \ge \Prob{ Y^{i^\star_1} \ne Y^{i_2^\star}}$ and $C_{i^\star_2} - C_{i_1^\star }< \Prob{ Y^{i^\star_2} \ne Y^{i_1^\star} }$. Hence a a contradiction.
+\end{proof}
+
+%\begin{proof}
+%\end{proof}
+%We now relate WD to the optimality condition described in Eq.~\eqref{eqn:interp_opt}. WD can be viewed as a more stringent condition for optimal actions. For an action to be optimal we require that the marginal cost be larger than marginal \emph{absolute} error, namely, for all $j > i$, with $i = a^*(\theta)$:
+%\begin{equation} \label{eqn:interp_WD}
+%\underbrace{C_j - C_i}_{\text{Marginal Cost}} \geq \underbrace{ E \left [ \left | \ind{Y_t \ne Y_t^i} - \ind{Y_t \ne Y_t^j} \right | \right ]}_{\text{Marginal Absolute Error}}
+%\end{equation}
+%%The difference between marginal error in Eq.~\eqref{eqn:interp_opt} and
+%where we have re-written $\Prob{Y^i\ne Y^j}$ as the marginal absolute error. We will show later that weak-dominant set is a maximal learnable set, namely, the set cannot be expanded while ensuring learnability.
+%
+%
+%We propose the following action selector $\awd: M_1(\{0,1\}^K)  \to [K]$:
+%\begin{defi}\label{def:awd}
+%	For $P_S \in M_1(\{0,1\}^K) $ let $\awd(P_S)$ denote the smallest index $i\in [K]$ such that
+%	\begin{subequations}
+%		\begin{align}
+%		\forall j<i \,\,:\,\, C_i - C_j < \Prob{ Y^i \ne Y^j }\,, \label{eq:wd1}\\ 
+%		\forall j>i \,\,:\,\, C_j - C_i \ge \Prob{ Y^i \ne Y^j }\,, \label{eq:wd2}
+%		\end{align}
+%	\end{subequations}
+%	where $C_i = c_1+\cdots + c_i$, $i\in [K]$ and $(Y^1,\dots,Y^K) \sim P_S$.
+%	(If no such index exists, $\awd$ is undefined, i.e., $\awd$ is a partial function.)
+%\end{defi}
+%
+%For any $\theta \in \TWD$ with $\theta = P_S\otimes P_{Y|S}$, $\awd(P_S)$ is well-defined and is essentially the only sound action selector map defined for all instances derived from the instances of $\TWD$. Further, the set $\TWD$ is essentially a maximal learnable set in the  $\mathrm{dom}(\awd)$, i.e., $\TWD$ is learnable but not uniformly learnable (see Appendix A for formal statements and proofs.).
+%

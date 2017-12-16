@@ -1,0 +1,532 @@
+\section{Introduction}
+In many applications one has to make a trade-off between accuracy and cost. For example, in cost sensitive predictions, it is not only the accuracy of a sensor/test that matters, but also the cost of using it. Also, it may happen that one has to predict labels of instances for which ground-truth cannot be obtained. In such scenarios, feedback about correctness of sensor predictions is unknown. Such problems arise naturally in healthcare, security, crowd-sourcing, etc. In healthcare, the patients may not reveal outcome of a treatment due to privacy issues, hence effectiveness of the treatment cannot be known. In crowd-sourcing systems, the expertise levels of self-listed-agents (workers) are not known hence the quality of their work cannot be known. 
+
+In this work, we focus on the study of sensor selection problem where we do not have the advantage of knowing the ground-truth and hence cannot measure the error rates of the sensors. However, the goal is to still find the `best' sensor that gives smallest value of error plus cost. In such setup, it is natural to first use the sensor with lowest cost and then use the sensors with higher costs till sensor accuracy and cost is optimally traded. Such set of problems are referred to as Unsupervised Sequential Sensor (USS) acquisition problems \cite{hanawal2017unsupervised}. In the USS setup, it is assumed that the sensors form a cascade, i.e., they are ordered by their prediction efficiency-- the average prediction error decreases with every stage of the cascade. Though it is assumed that the sensor ordering is known and better sensors are associated with higher costs, the exact values of sensor errors are still unknown. The learner's goal is to find a sensor that has small value of  total prediction cost for a given task, which includes both the cost of acquiring the sensor outputs and the cost due to any incorrect prediction. Figure \ref{fig:USS} depicts the USS setup.
+%\begin{figure}[H]
+%	\centering
+%	\includegraphics[width=\linewidth]{figures/USS_Context.pdf}
+%	% % \caption{Unsupervised Sequential Sensor Acquisition}
+%	\caption{Cascaded Unsupervised Sequential Sensor Selection with Contextual Information. ${Y}_t^1 ,{Y}_t^2, \cdots , {Y}_t^K$, are sensor's outputs for context $x_t$ and $c_i$ denotes the acquiring cost of output for sensor $i$.}
+%	\label{fig:USS}
+%\end{figure}
+\vspace{-3mm}
+Each task is associated with side information or contextual information. For example, in healthcare the sensors could be various tests that need to be applied to ascertain existence of a condition in patients and each patient could represent a task through contextual information like, age, sex, height, etc. The optimal test applied on a task could depend on the task. Clearly, without the knowledge of the ground-truth one cannot find the optimal sensor as the sensor accuracies cannot be known. In the USS setup, the structure of the problem is exploited and when the weak dominance \cite{hanawal2017unsupervised} it is shown that  learning is possible. However, the goal in \cite{hanawal2017unsupervised} is to find the single best sensor to apply for each task and ignores any contextual information associated with them. Our goal in this work is to study how to use contextual information associated with each task to identify best test to apply on it.
+
+*** One more application: Deciding label of a input under unsupervised setting when multiple classifiers are given ***
+
+
+
+%~\\
+%\linebreak
+%\textbf{Our Contributions}\hspace{2mm}
+%We assume that prediction of each sensor is based on parameterized linear function of contexts (margins). Based on this, we have proposed different models in this report. In section 4, we propose a models to study the USS problem with side information and develop an algorithm that has sub-linear regret. We verify our result on synthetic \& real datasets. The learner observes only a noisy margin of the  selected sensors.
+%~\\
+%\linebreak
+%\textbf{Organization}\hspace{2mm} Section 3 introduces the unsupervised sensor selection problem with contextual case. Section 4 presents our margins based algorithm with weak regret bound and has experimentally verify on synthetic and real datasets. 
+%~\\
+%\linebreak
+%\textbf{Notation}\hspace{2mm}
+%$x_t \in \mathbb{R}^d$ represents context received at time $t$. Each context $x_t \sim \mathcal{D}$ where $\mathcal{D}$ is fixed and unknown distribution. The weighted $l_2$-norm associated with a positive definite matrix $A$ is defined by $\parallel x \parallel_A:= \sqrt{x^\top Ax}$. The set of actions is denoted by $[K]$. For each $a \in [K]$, $\theta_a^* $ denotes the fixed and unknown parameter associated with sensor $a$ and $\widehat{\theta}_t^a$ is an estimation of $\theta_a^\star$ using all the data collected till time $t-1$. We assumed, a fixed and known cost $c_a$ is associated with the sensor $a$. We assume $\parallel x_t \parallel_2 \leq L $ for all $t$ and $\parallel \theta_a^* \parallel_2\leq S$ for all $a\in [K]$  where both $S$ and $L$ are unknown. The sensor, arm and classifier are used interchangeably. The $\widehat{y}_t^a$ is the predicted margin value using the estimated classifier $\widehat{\theta}_t^a$ while $y_t^a$ is observed margin value when learner choose to play arm $a$ at round $t$.
+% The term sensors, tests and arms are used synonymously in this paper. Finally, $[n]:= \{1,2,\ldots,n\}$. In this report, the terms ``sensor'', ``test'' and ``classifier'' are synonymous.
+
+
+\section{Related Work}
+\cite{robbins1952mab}
+\subsection{Multi-Armed Bandits}
+\begin{description}
+	\item[Background of MAB]
+	\item[Sublinear Regret:] Expected v/s High Probability Regret 
+\end{description}
+
+
+\subsection{Different Reward Models for Contextual Bandits}
+Brief details about Contextual Bandits.
+\subsubsection{Linear Model}
+With the development of modern technologies, contextual bandits have many applications in web based advertising and recommendation \citep{agarwal2009online, li2010contextual}. The most studied model in contextual bandits literature is the linear model \citep{auer2002using, dani2008stochastic, chu2011contextual, rusmevichientong2010linearly, abbasi2011improved}. The linear bandit model with side observation is also studied by \cite{valko2014spectral}. 
+
+\subsubsection{Genralized Linear Model}
+Recently, \citep{filippi2010parametric, li2017provable, jun2017scalable} study the stochastic generalized linear models (GLM) in the contextual bandit setting which shows show $\sqrt{d}$ improvement over linear models. Linear, logistic and probit regression serve as three important special cases of GLM. 
+\subsubsection{Nonlinear  Model}
+Kernalized Model~\cite{Valko:2013:FAK:3023638.3023705}
+	
+	
+\section{Problem Setting}
+The problem of the unsupervised, stochastic, cascaded sensor selection can be specified by a sequence $(X_t,Y_t, (Y_t^a)_{a \in [K]})$ of iid random variables, where $K$ is the number of sensors,$X_t$ is the context at time $t$, $Y_t$ is the associated label and $Y_t^a$ is label predicted by sensor $a \in [K]$. The $K(>1)$ sensors are known to be ordered from least accurate to most accurate, i.e., expected error for a context $x$, $\gamma_a(x) := \Pr\{Y \neq Y^a|X=x\}$ of sensor $a$ is a decreasing function of $a$. As the setting considered is unsupervised, we do not have any knowledge about expected error $\gamma_a(x)$ except for their ordering which is assumed to remain the same for all contexts. Hence, given a context $x$, we need to make some assumptions for optimally choosing best option. 
+
+For a given context, the total cost for selecting sensor $i$ is $C_i + \gamma_i(x)$, where $C_i=c_1 + \cdots + c_{i}$. The goal of the learner is to select an action that has smallest total cost (henceforth simply referred as cost) for a given context. For a given sequence of contexts $\{x_t\}_1^n$, we evaluate the learning performance a policy/algorithm that selects action $I_t:=I_t(x_t)$ in round $t$ in terms of the regret defined as follows:  
+\vspace{-.1cm}
+\begin{align}
+\label{equ:lin_regret}
+R_n = \sum_{t=1}^n\left(C_{I_t} + \gamma_{I_t}(x_t) - (C_{i^\star_t} +\gamma_{i^\star_t}(x_t))\right)
+\end{align}
+where 	$i_t^\star= \argmin_i(C_i + \alpha\gamma_i(x_t))$. The goal of the learner is to learn a policy that has lowest sub-linear regret, i.e., $R_n/n \rightarrow 0$ as $n \rightarrow \infty$ 
+means that the learner in the long run collects almost as much reward on expectation as when  the optimal action is known. 
+
+%Here $\mathbb{P}\{\bar{y}^i \neq \bar{y}^j|x\}$ represents the disagreement probability between observed labels of sensor $i$ and $j$ for a context $x$. \textcolor{blue}{Via an estimate of the probabilities sandwiched between costs and expected errors, one selects the arm to use.}
+
+
+\subsection{Some Definition}
+%\textcolor{red}{Change notations and make these consistent with other part of report.}
+Let $\Theta_{SA}$ be the set of all stochastic, cascaded sensor acquisition problems.
+%Thus,  $\theta \in \Theta_{SA}$ such that if $Y \sim \theta$ then $\gamma_k(\theta) := \mathbb{P}(Y \neq Y^k)$ is a decreasing sequence. 
+%Given a subset $\Theta \subset \Theta_{SA}$ , we say that $\Theta$ is learnable if there exists a learning algorithm $A$ such that for any  $\theta \in \Theta$, the expected regret $\mathbb{E}[\mathcal{R}_n(A, \theta)]$ of algorithm $A$ on instance $\theta$ is sublinear. A subset $\Theta$ is said to be a maximal learnable problem class if it is learnable and for any $\Theta^\prime \subset \Theta_{SA}$ super-set of $\Theta$, $\Theta^\prime$ is not learnable. We define two special learnable problem classes: Strong Dominance (SD) and Weak Dominance (WD), $\Theta_{SD} \subset \Theta_{WD}$ , where the regularity properties of the instances in  $\Theta_{SD}$ are more intuitive, while $\Theta_{WD}$ can be seen as a maximal extension of  $\Theta_{SD}$ .
+\begin{define}[Strong Dominance (SD)] An problem instance $\theta \in \Theta_{SA}$ is said to satisfy the strong dominance property for all contexts if a sensor predicts correctly then all the sensors in the subsequent stages of the cascade also predict correctly, i.e., for any $i \in [K]$,
+	\begin{align} \label{equ:SD}
+Y^i = Y \Rightarrow  Y^{i+1} = Y \Rightarrow \cdots \Rightarrow Y^K = Y
+	\end{align}
+	almost surely (a.s.) where $(X, Y, Y^1, \cdots , Y^K) \sim P_\theta$.
+\end{define} 
+
+\begin{define} [Weak Dominance (WD) without context] An instance $\theta \subset \Theta_{SA}$ is said to satisfy the weak dominance property if the best action is $i^\star = a^\star(\theta)$. Then	
+	\begin{align} \label{equ:WD}
+	\forall j \in [K], \, j > i^\star : C_j - C_{i^\star} \geq \alpha\mathbb{P}(Y^{I} \neq Y^j)
+	\end{align}
+	
+	%\subsection{Strong Dominance and Weak Dominance property in Contextual Case}
+	%	For any context $x \in \mathcal{X}$, the cost of selecting the $i$-th sensors in USS setting is  defined as $C_i + \alpha\gamma_i(x_t)$ where $C_i = c_1 + c_2 + \cdots + c_i$ with given positive $\{c_i\}_1^K$ and given $\alpha>0$. Let $\gamma_i(x):= \Pr\{\hat{Y}_i \neq y | X=x\}$ denote the error rate of sensor $i$ for context $x$ with label $y$. 
+	%	% .0and $c_i$ represents cost of using sensor $i$.
+	%	Let $i^\star(x)$ denote the best sensor for input $x_t$, i.e., 
+	%	\begin{align}
+	%	\label{equ:selection}
+	%	i^\star(x) = \argmin_i(C_i + \alpha\gamma_i(x))
+	%	\end{align}
+	
+\end{define} 
+
+\begin{define}[Weak Dominance with Contextual Information (WDC)] An instance $\theta \subset \Theta_{SA}$ is said to satisfy the weak dominance with contextual information property if for any context $x$
+	\begin{align} \label{equ:WDC}
+	\forall j \in [K], \, j > i^\star(x) : C_j - C_{i^\star(x)} \geq \alpha\mathbb{P}(Y^{i^\star(x)} \neq Y^j|X=x)
+	\end{align}
+\end{define} 
+where $i^\star(x)$ is the optimal action for context $x$.
+%\begin{define}[Sensor's Disagreement Indicator (SDI)] For given context $x$, the disagreement between predicted labels of two sensors $i$ and $j$ defines using sensor's disagreement indicator as follows
+%	\begin{align*} 
+%	d_{ij}(x) = \bigg\{\begin{array}{ll}
+%	1, & Y_i \neq Y_j \text{ for given } x \\
+%	0, & \text{o/w } 
+%	\end{array} 
+%	\end{align*}
+%	Above equation can be written as:
+%	\begin{align} \label{equ:SDI}
+%	d_{ij}(x) = \mathbbm{1}_{\left\{\bar{y}^i \neq \bar{y}^j|x\right\}}
+%	\end{align}
+%\end{define} 
+
+\begin{define}[Sub-Gaussian Random Variables]
+	Let $(X_t)$ be  $\{\mathcal{F}_t\}$ adapted: $\{\mathcal{F}_t\}$ is an increasing sequence of sigma fields such that $X_t$ is $\mathcal{F}_t$-measurable with $\mathbb{E}[X_t | \mathcal{F}_{t-1}] = 0$. Then, $\{X_t\}$ is a Sub-Gaussian with parameter $R$ if there exits $R>0$  such that for all $t$ and $\lambda \in \mathcal{R}$ the following holds:
+	\begin{equation}
+	\label{equ:sub_gaussian}
+	\mathbb{E}\left[e^{\lambda X_t}| \mathcal{F}_{t-1}\right] \leq e^{\lambda^2R^2/2}
+	\end{equation}
+\end{define} 
+
+
+%\begin{define}
+%	A  random  variable  $X \in \mathbb{R}$  is  said  to  be  sub-Gaussian  with  variance  proxy  $\sigma^2$  if  $\mathbb{E}[X] = 0$ and its moment generating  function satisfies 
+%	
+%	\begin{equation}
+%	\label{equ:sub_gaussian1}
+%	\mathbb{E}\left[exp(\lambda X)\right]\leq exp\left(\frac{\lambda^2\sigma^2}{2}\right) \;\; \forall \lambda \in \mathbb{R}
+%	\end{equation}
+%\end{define}
+
+%\subsection*{Useful Results}
+%\begin{lemma}[\cite{abbasi2011improved}.]
+%	\label{oful}
+%	Let $V_t^a = X_{t-1}^a(X_{t-1}^a)^\top + \lambda I$ and $||\theta_a^\star||_2 \leq S$. For any $x \in \mathbb{R}^d$, $||x||_2 \leq L$ and $t \geq 1$, with probability at least $1-\delta$:
+%	\begin{equation}
+%	|x^\top(\widehat{\theta}_t^a - \theta_a^\star)|_{V_t^{-1}} \leq \beta_t^a||x||_{V_t^{-1}}
+%	\end{equation}
+%	where $\beta_t^a =  \lambda^{1/2}S + R\sqrt{2\log(1/\delta) + d\log(1 + C^aL/(\lambda d))}$ and $C^a$ is the number of times classifier $a$ is used till time $t$.
+%\end{lemma}
+%%\begin{proof}
+%%	Easily proves by using Theorem 3 of Abbasi et al.~\cite{abbasi2011improved}.
+%%\end{proof}
+%%
+%%So, equation~\eqref{edq:disagreement} can be written using Lemma~\eqref{oful} as:
+%%\begin{equation}
+%%\label{estimate}
+%%\widehat{y}_t^a = (\widehat{\theta}_t^a)^\top x_t +\beta_t^a ||x_t||_{(\overline{V}_t^a)^{-1}}
+%%\end{equation}
+%%
+%%The Proposition 3 of Hanawal et al.~\cite{hanawal2017unsupervised} can be defined for contextual case as follows:
+%%\begin{proposition} [ Proposition 3 of Hanawal et al.~\cite{hanawal2017unsupervised}]
+%%	\label{pro:exp_err_prob}
+%%	Let $\gamma_i(x)$ is the error rate of arm $i$ for given $x$, $\widehat{Y}_i$ is the label predicted by test/senor $i$ for given $x$   and $i < j$ then 
+%%	\begin{align*}
+%%	0 \leq \gamma_i(x) - \gamma_j(x) = \mathbb{P}\{\widehat{Y}_i \neq \widehat{Y}_j|x\} - 2\mathbb{P}\{\widehat{Y}_j \neq Y, \widehat{Y}_i = Y|x\} 
+%%	% \text{\textcolor{red}{ Need to verify}}
+%%	\end{align*}
+%%\end{proposition}
+%
+%\begin{lemma}
+%	\label{lem:exp_err_prob}
+%	\textbf{~\cite{hanawal2017unsupervised}[Prop. 3]}
+%	Let $\gamma_i(x)$ is the error rate of arm $i$ for given $x$, $\widehat{Y}_i$ is the label predicted by test/senor $i$ for given $x$   and $i < j$ then 
+%	\begin{align*}
+%	0 \leq \gamma_i(x) - \gamma_j(x) = \mathbb{P}\{\widehat{Y}_i \neq \widehat{Y}_j|x\} - 2\mathbb{P}\{\widehat{Y}_j \neq Y, \widehat{Y}_i = Y|x\} 
+%	% \text{\textcolor{red}{ Need to verify}}
+%	\end{align*}
+%\end{lemma}
+%\begin{proof}
+%	\textcolor{red}{Similar to non-contextual case. Add it}
+%\end{proof}
+%~\\
+%We can not evaluate expected loss $\gamma_i(x)$ but with {\it Strong Dominance} property, $\forall j>i, \, 2\mathbb{P}\{\widehat{Y}_j \neq Y, \widehat{Y}_i = Y|x\} = 0$ then equation in lemma~\ref{lem:exp_err_prob} can re-written as:
+%\begin{align}
+%\label{equ:sd_err}
+%\gamma_i(x) - \gamma_j(x) = \mathbb{P}\{\widehat{Y}_i \neq \widehat{Y}_j|x\}
+%\end{align} 
+%
+%\subsection{Modeling as Contextual Multi-Armed Bandit Problem}
+%\subsubsection{Overview of Multi-Armed Bandit}
+%\subsubsection{Multi-Armed Bandit with Side Information}
+%First this problem is proposed by \cite{woodroofe1979one}.
+%
+%\vfill
+	
+	%\large{Unsupervised Cost Sensitive Predictions with Side Information}
+\section{Disagreement based Model with Linear Assumption}
+%\subsection{Linear Disagreement Assumption}
+%\label{sec:dma_algo_disagreement}
+\subsection{Notations}
+\label{sec:dma_not}
+% Common Notations: 
+\begin{itemize}
+	\item $x_t$: Context received at time $t$.
+	\item $Y_t$: True label for data instance $x_t$.
+	\item $\widehat{Y}_i^t$: Prediction of $i^{th}$ Test for data instance $x_t$.
+	\item $\gamma_i(x_t)$: Expected error of Test $i$ for given $x_t$ i.e. $\mathbb{E}[\mathbbm{1}_{\{Y_t \neq \widehat{Y}_i^t| x_t\}}]$.
+	% Probability of misclassification of $i^{th}$ Test for given $x_t$.
+	\item $I_t$: Test selected at time $t$.
+	\item $\alpha$: Used as trade-off parameter between cost and accuracy of sensors.
+	\item $c_i$: Cost of using $i^{th}$ Test.
+	\item $x_{i,j}^t$: Feature vector for data instance $x_t$ for sensor $i$ and $j$ generated using suitable feature map $(\phi_{ij})$. We assume $||x_{i,j}^t||_2 \le L$ for all $i,j$ and $t$.
+	\item $\widehat{\theta}_t$: Estimate of true coefficients $(\theta^\star)$ using disagreement information available till $t-1$ rounds.
+	\item $\eta_{i,j}^t$: R-sub Gaussian noise is added for estimating disagreement probability between arm $i$ and arm $j$ 
+\end{itemize}
+
+In this model we assume that the disagreement between observed labels of sensors $i,j$ for a given context $x$ is as follows:
+%\begin{align}
+%\label{equ:disagreement_prob}
+%\mathbbm{1}_{\left\{\bar{y}^i \neq \bar{y}^j|x\right\}} = \mu({\phi_{ij}(x)^\top\theta^\star} ) + \epsilon_{i,j}
+%%d_{ij}(x) = \mu({\phi_{ij}(x)^\top\theta^\star}) + \epsilon_{i,j}
+%%d_{ij}(x) = \langle\,x_{i, j}, \theta^\star\rangle + \eta_{i,j} \text{ where } x_{i,j} = \Psi_{ij}(x)
+%\end{align}
+%where $\theta^\star$ is the true unknown coefficient vector, $\eta_{i,j}$ is assumed to be $R$-sub-Gaussian noise which statisfy equation \eqref{equ:sub_gaussian}  and $\phi_{ij}(x)$ is suitable feature map to get feature vector for sensor $i, j$ and given context $x$.
+%
+%The expected disagreement between predicated labels of two arms $i$ and $j$ is given by below equation: 
+%\begin{align}
+%\label{equ:exp_dis}
+%\mathbb{E}\left[\mathbbm{1}_{\left\{\bar{y}^i \neq \bar{y}^j|x\right\}}\right] = \mu({\phi_{ij}(x)^\top\theta^\star})
+%\end{align}
+%We know the exception of indicator r.v. is given by
+%\begin{align}
+%\label{equ:exp_ind_pro}
+%\mathbb{E}\left[\mathbbm{1}_{\left\{\bar{y}^i \neq \bar{y}^j|x\right\}}\right] = \mathbb{P}\left\{\bar{y}^i \neq \bar{y}^j|x\right\} 
+%\end{align}
+%From equation \eqref{equ:exp_dis},  and \eqref{equ:exp_ind_pro}, we can say that
+\begin{align}
+\mathbb{P}\left\{\widehat{Y}_i \neq \widehat{Y}_j|X=x\right\} = {\phi_{ij}(x)^\top\theta^\star}
+\end{align}
+where $\theta^\star$ is fixed but unknown. We assume that $||{\theta}^\star||_2 \le S$.
+
+\subsection{Selection Criteria for Choosing Optimal sensor} The optimality of action (choosing sensor) can be captured in terms of marginal costs and marginal errors. In particular, for any context $x$ a sensor $i$ is optimal if for all $j > i$ the marginal increase in cost, $C_j - C_i$, is larger than the marginal decrease in error, $\gamma_i(x)-\gamma_j(x)$ i.e.,
+\begin{align}
+\label{equ:lin_cost_err}
+%&C_j - C_i \ge \mathbb{E}[\mathbbm{1}_{\{Y \neq Y^i\}} - \mathbbm{1}_{\{Y \neq Y^j\}}]\nonumber \\
+%&\Rightarrow 
+\underbrace{C_j - C_i}_{\text{marginal cost}} \ge  \underbrace{\gamma_i(x)-\gamma_j(x)}_{\text{marginal error}}
+\end{align}
+
+Since $\gamma_i(x)$ is unknown for any $i$ and $x$, equation \eqref{equ:lin_cost_err} does not lead to an computational algorithm for sensor selection. So, we use the relation $\gamma_i(x)-\gamma_j(x)\leq\mathbb{P}\{Y^i\neq Y^j| X=x\}$ \cite{hanawal2017unsupervised}[Prop. 3] where $\widehat{Y}_i$ is label given for context $x$ by sensor $i$. Then using weak dominance condition of~\cite{hanawal2017unsupervised}[Def. 3], the weaker decision rule for selecting best sensor is given by
+
+\begin{proposition}
+Assume that the weak dominance property holds. Let $i^\star(x)$ be the optimal action for context $x$.	Then,
+\begin{align}
+\label{equ:selection_label}
+\forall j > i^\star (x)	C_j - C_{i^\star(x)} \ge \mathbb{P}\{Y^{i^\star(x)}\neq Y^j| X=x\}
+\end{align}
+\end{proposition}
+In the following we develop an algorithm that uses the above decision rule to select an optimal arm. The algorithm estimate the disagreement probabilities by comparing the predictions of the selected sensors. When the predictions of sensors $i,j$ are compared, the indicator value of the disagreements can be interpreted as a noisy version of their disagreement probability as give below
+
+\[\mathbbm{1}_{\{Y^i \neq Y^j|X=x\}} = \mathbb{P}\{Y^i\neq Y^j|X=x\}+ \eta_{i,j}(x)\]
+where $\eta_{i,j}(x)$ is a zero-mean bounded random variable and hence sub-Gaussian with some parameter $R$ (\colorbox{red}{Need to compute value of $R$}).
+\subsection{Disagreement Model under Weak Dominance Property}
+\begin{algorithm}[H]
+	\caption{Linear Disagreement Model under Weak Dominance Property}
+	\label{algo:linDM}
+	\begin{algorithmic}[1]
+		%   \Require
+		\State \textbf{Input:} $\alpha > 0, R > 0, \lambda > 0, m \in \mathbb{N}, d \in \mathbb{N}, \delta \in (0,1)$
+		\State $\overline{V}_0 = \lambda \mathrm{I}_d$, $M_0 = \ve{0}_d$ 
+		\For{$t=1, 2, \ldots, m$} 
+		\State Observe context, $x_t \in \mathbb{R}^d$
+		\State Choose arm $I_t = K$
+		\State Observe labels $\{\widehat{Y}_1^t, \widehat{Y}_2^t, \ldots, \widehat{Y}_{I_t}^t \}$; $\widehat{Y}_i^t \in \{0, 1\}$
+		\State Construct feature vector using features of input $(x_t)$ and arm $i$ and $j$; $x_{i, j}^t \in \mathbb{R}^d$
+		\State $\overline{V}_t = \overline{V}_{t-1} + \sum_{i=1}^{I_t-1}x_{i, I_t}^t (x_{i, I_t}^t)^\top$
+		\State $M_t = M_{t-1} + \sum_{i=1}^{I_t-1}\mathbbm{1}_{\{\widehat{Y}_i^t \neq \widehat{Y}_{I_t}\}}x_{i, I_t}$ 
+		\EndFor
+		
+		%  \State \\
+		%   \State \textbf{Exploit-Explore Step}
+		%   \For{$t=m+1, m+2, \ldots$}
+		\For{$t=m+1, m+2, \ldots$}
+		\State $\widehat{\theta}_t = \overline{V}_{t-1}^{-1}M_{t-1}$
+		\State Observe context, $x_t$
+		\State $\beta_t = R\sqrt{d\log\bigg(1 + \frac{tKL^2}{\lambda d}\bigg) + 2\log\bigg(\frac{1}{\delta}\bigg)} + \lambda^{1/2}S$
+		\State \begin{equation}
+		\label{eqn:SelectionCriteria}
+		A_t= \{i \in [K]: \forall \;\; j \neq i  \;\;  C_j - C_i \geq \alpha\langle\,x_{i, j}^t, \widehat{\theta}_t\rangle -\, \beta_t ||x_{i,j}^t||_{\overline{V}_t^{-1}} \}\cup\{K\}
+			\end{equation}
+		%   \textcolor{red}{LB or UB??? $->$ LB}
+		\State Choose arm $I_t$ to be the smallest index in $A_t$
+		\State Observe labels $\{\widehat{Y}_1^t, \widehat{Y}_2^t, \ldots, \widehat{Y}_{I_t}^t \}$
+		\State $\overline{V}_t = \overline{V}_{t-1} + \sum_{i=1}^{I_t-1}x_{i, I_t}^t (x_{i, I_t}^t)^\top$
+		\State $M_t = M_{t-1} + \sum_{i=1}^{I_t-1}\mathbbm{1}_{\{\widehat{Y}_i^t \neq \widehat{Y}_{I_t}^t\}}x_{i, I_t}$
+		\EndFor
+		
+	\end{algorithmic}
+\end{algorithm}
+
+\subsection{Regret Analysis of Disagreement Model}
+\label{sec:dma_regret}
+Regret analysis is similar to that for the OFUL algorithm given in paper~\cite{abbasi2011improved}.
+
+\subsubsection{Important Lemmas and Theorems}
+\label{sec:dma_regret_lemmas}
+Some of the lemma drives using results from paper~\cite{abbasi2011improved, hanawal2017unsupervised}.
+\begin{lemma}
+For any $i,j \in [K] $ and any context $x$ the following relations hold.
+\begin{equation}
+\label{eqn:disagree1}
+\gamma_i(x)-\gamma_j(x) = \Pr\{Y^i \neq Y^j|X=x\}-2\Pr\{Y^i=Y, Y^j \neq Y|X=x\}.
+\end{equation}	
+\begin{equation}
+\label{eqn:disagree2}
+\gamma_i(x)-\gamma_j(x) = -\Pr\{Y^i \neq Y^j|X=x\}+2\Pr\{Y^i \neq Y, Y^j = Y|X=x\}.
+\end{equation}	
+\end{lemma}
+		
+\begin{lemma}
+	\label{lem:confidence}
+	% \textbf{~\citep{abbasi2011improved}}  
+	Let $\overline{V}_t = \sum_{s=1}^{t}\sum_{j=1}^{I_t-1}x_{j, I_t}^s(x_{j, I_t}^s)^\top + \overline{V}_0$ and $S_t = \sum_{s=1}^{t}\sum_{j=1}^{I_t-1}\eta_{j,I_t}^sx_{j, I_t}^s$. Then, for any $\delta > 0 $ with probability at least $1-\delta$, for all $t \geq 0$,
+	\begin{align*}
+	||S_t||_{\overline{V}_t^-}^2 \le 2R^2\log\bigg(\frac{det(\overline{V}_t)^{1/2}det(\overline{V}_0)^{-1/2}}{\delta}\bigg)
+	\end{align*}
+\end{lemma}
+
+\begin{lemma}
+	\label{lem:diff} 
+	Let $\overline{V}_t$ be as defined in lemma~\ref{lem:confidence} and  let $\overline{V}_0 =\lambda I_d$. Assume that $||\theta^\star||_2 \le S$. Then, for any $\delta > 0$ with probability at least $1-\delta$, for all $t \ge 0$ and $ x^t$,
+	\begin{align*}
+	|\langle\,x_{i, j}^t, \theta^\star\rangle - \langle\,x_{i, j}^t, \widehat{\theta}_t\rangle|\le \beta_t||x_{i,j}^t||_{\overline{V}^-_t}
+	\end{align*}
+	where $\beta_t = R\sqrt{d\log\bigg(1 + \frac{tKL^2}{\lambda d}\bigg) + 2\log\bigg(\frac{1}{\delta}\bigg)} + \lambda^{1/2}S$ 
+	% $\beta_t \le R \sqrt{2\log\bigg(\frac{det(\overline{V}_t)^{1/2}det(\lambda I_d)^{-1/2}}{\delta}\bigg)} + \lambda^{1/2}S $
+\end{lemma}
+
+\begin{lemma}
+	\label{lem:x_norm}
+	For any $1 \le i < j \le K$, $\{x_{i,j}^s\}_{s=1}^\infty$ be a sequence in $\mathbb{R}^d$, $V$ is a $d \times d$ positive definite matrix and define $\overline{V}_t = V + \sum_{s=1}^{t}\sum_{j=1}^{I_t-1}x_{j, I_t}^s(x_{j, I_t}^s)^\top$. Then, we have that 
+	\begin{align*}
+	\sum_{t=1}^n \min\{1, ||x_{i,j}^s||_{\overline{V}_{t-1}^-}^2\} \le 2\log\frac{det(\overline{V}_n)}{det(V)}
+	\end{align*}
+	Further if $||x_{i,j}^s||_2 \le L$ for all $t$ and $\lambda_{min}(V) \ge \max\{1, L^2\}$, then
+	\begin{align*}
+	\log\frac{det(\overline{V}_n)}{det(V)} \le \sum_{t=1}^n ||x_{i,j}^s||_{\overline{V}_{t-1}^-}^2 \le 2\log\frac{det(\overline{V}_n)}{det(V)}
+	\end{align*}
+\end{lemma}
+
+% \begin{lemma}
+% \label{lem:det_trc}
+% (Determinant-Trace Inequality) Suppose $X_1, X_2, \vdots, X_t \in \mathbb{R}_d$ and for any $1 \le s \le t$, $||X_s||_2 \le L$. Let $\overline{V}_t = \lambda I_d + \sum_{s=1}^{t}X_sX_S^\top$, for some $\lambda > 0$. Then
+% \begin{align*}
+% det(\overline{V}_t) \le (\lambda + tL^2/d)^2
+% \end{align*}
+% \end{lemma}
+
+\begin{lemma}
+	\label{lem:det_trc}
+	% (Extension of Lemma~\ref{lem:det_trc}) 
+	% If algorithm receives on average $A_{I_t}$ samples instead of one sample $X_s$ in one round and
+	(Determinant-Trace Inequality) Suppose $K$ is total number of sensors/tests, for any $1 \le s \le t$ and $1 \le j < I_t \le K$, $||x_{j, I_t}^s||_2 \le L$ where $x_{j, I_t}^s \in \mathbb{R}^d$. Let $\overline{V}_t = \lambda I_d + \sum_{s=1}^{t}\sum_{j=1}^{I_t-1}x_{j, I_t}^s(x_{j, I_t}^s)^\top$, for some $\lambda > 0$. Then  
+	\begin{align*}
+	% det(\overline{V}_t) \le (\lambda + A_{I_t}tL^2/d)^2 \le (\lambda + KtL^2/d)^2
+	det(\overline{V}_t) \le (\lambda + tKL^2/d)^2
+	\end{align*}
+	\begin{proof} By inequality of arithmetic and geometric means,
+		\begin{align*}
+		det(\overline{V}_t) \le (trace(\overline{V}_t)/d)^d
+		\end{align*}
+		As the trace of matrix is a linear mapping i.e. $trace(A+B) = trace(A) + trace(B)$, hence
+		\begin{align*}
+		trace(\overline{V}_t) &= trace(\lambda I_d) + \sum_{s=1}^{t}\sum_{j=1}^{I_t-1}trace(x_{j, I_t}^s(x_{j, I_t}^s)^\top) \\
+		&= d\lambda + \sum_{s=1}^{t}\sum_{j=1}^{I_t-1}||x_{j, I_t}^s||_2^2 \\
+		&= d\lambda +\sum_{j=1}^{I_t-1}\sum_{s=1}^{t}||x_{j, I_t}^s||_2^2 \\
+		% &\le d\lambda + \sum_{j=1}^{I_t-1}tL^2\\
+		% &\le d\lambda + t\sum_{j=1}^{I_t-1}||x_{j, I_t}^s||_2^2 \\
+		\Rightarrow trace(\overline{V}_t) &\le d\lambda + tKL^2 \text{ as } I_t \le K
+		\end{align*}
+		Using this result, we get
+		\begin{align*}
+		det(\overline{V}_t) &\le (trace(\overline{V}_t)/d)^d \\
+		&\le \big((\lambda d + tKL^2)/d\big)^d \\
+		\Rightarrow det(\overline{V}_t) &\le (\lambda + tKL^2/d)^d
+		\end{align*}
+	\end{proof}
+\end{lemma}
+
+\begin{lemma}
+	\label{lem:tight_det_trc}
+	Assume same as in lemma~\ref{lem:det_trc},  let $A_{I_t} = \frac{1}{t}\sum_{s=1}^{t}I_s$ where $I_s$ is the optimal sensor/test chosen by algorithm for data instance $x_s$. 
+	\begin{align*}
+	det(\overline{V}_t) \le (\lambda + tA_{I_t}L^2/d)^2
+	\end{align*}
+	
+	\begin{proof}
+		As we know, 
+		\begin{align*}
+		trace(\overline{V}_t) &= d\lambda +\sum_{j=1}^{I_t-1}\sum_{s=1}^{t}||x_{j, I_t}^s||_2^2  \\
+		&\le d\lambda + tA_{I_t}L^2 \text{ where $A_{I_t} \le K$}
+		\end{align*}
+		By inequality of arithmetic and geometric means,
+		\begin{align*}
+		det(\overline{V}_t) &\le (trace(\overline{V}_t)/d)^d  \\
+		\Rightarrow det(\overline{V}_t) &\le (\lambda + tA_{I_t}L^2/d)^2
+		\end{align*}
+	\end{proof}
+\end{lemma}
+
+%\begin{lemma}
+%	\label{lem:je_reg}
+%	Let $1/T$ is the probability of choosing $a_t$ for $t \in [T]$ from a sequence of $\{a_1, a_2, \cdots , a_T\}$. Then
+%	\begin{align*}
+%	\sum_{t=1}^T a_t \le \sqrt{T\sum_{t=1}^T a_t^2}
+%	\end{align*}
+%	\begin{proof}
+%		(By Jensen's Inequality) If $f$ is a convex function then
+%		\begin{align*}
+%		f(\mathbb{E}[X]) \le  \mathbb{E}[f(X)]
+%		\end{align*}
+%		Let $f$ is a square function i.e. $f(x) = x^2$ and $X$ is a r.v. which represents the chosen $a_i$. Then
+%		\begin{align*}
+%		f(\mathbb{E}[X]) &= \bigg( \sum_{t=1}^T \frac{a_t}{T}\bigg)^2
+%		\le \mathbb{E}[f(X)] 
+%		\le \frac{1}{T}\bigg( \sum_{t=1}^T a_t^2\bigg) \\
+%		\Rightarrow \sum_{t=1}^T a_t &\le \sqrt{T\sum_{t=1}^T a_t^2}
+%		\end{align*}
+%	\end{proof}
+%\end{lemma}
+
+
+\subsubsection{Cost and Expected Error Relationship}
+To reflect the optimistic principle of algorithm, Arm $I_t$ has lowest cost i.e. $C_{I_t} + \alpha\gamma_{I_t}(x_t)$. Then following lemma will hold:
+\begin{lemma}
+	\label{lem:cost_err}
+	If arm $I_t$ is best arm chosen by the algorithm and $\overline{V}_0 = \lambda I_d$ then
+	\begin{align*}
+	\text{For } j > I_t; \text{ } C_{I_t} - C_j \leq -\alpha\langle\,x_{i,j}^t,\widehat{\theta}_t\rangle + \alpha \beta_t||x_{i,j}^t||_{\overline{V}^-} 
+	\end{align*}
+\end{lemma}
+\begin{proof} From optimal criteria, smallest $I_t$ is best arm if 
+	\begin{align*}
+	C_j - C_{I_t} \geq  \alpha[\gamma_{I_t}(x_t) - \gamma_j(x_t)]
+	\end{align*}
+	We have
+	\begin{align*}
+	C_{I_t} - C_j &\leq  -\alpha(\gamma_{I_t}(x_t) - \gamma_j(x_t)]) \\
+	&\leq  -\alpha\mathbb{P}\{\widehat{Y}_i^t \neq \widehat{Y}_j^t|x_t\}  \nonumber \\
+	&\leq  -\alpha(\langle\,x_{i,j}^t,\widehat{\theta}_t\rangle -  \beta_t||x_{i,j}^t||_{\overline{V}^-}) \mbox{ By Lemma } 4.2\\
+	\Rightarrow C_{I_t} - C_j &\leq -\alpha\langle\,x_{i,j}^t,\widehat{\theta}_t\rangle + \alpha \beta_t||x_{i,j}^t||_{\overline{V}^-} 
+	\end{align*}
+\end{proof}
+
+% \subsubsection{Cost-Expected Error Relationship}
+% \label{sec:ra_}
+
+
+\subsubsection{Instantaneous Regret}
+\label{sec:ra_ir}
+The instantaneous regret of algorithm is the regret incurred for any time t. 
+
+\begin{theorem}
+	\label{thm:ir}[\colorbox{red}{This proof is not complete}]
+	The instantaneous regret $r_t$ of algorithm with probability at least $1-\delta$ is:
+	\begin{align*}
+	r_t \le 2\alpha \beta_t ||x_{I_t, i^\star}^t||_{\overline{V}^-}
+	\end{align*}
+\end{theorem}
+\begin{proof}
+	\begin{align*}
+	r_t &= C_{I_t} + \alpha\gamma_{I_t}(x_t) - \argmin_i(C_i + \alpha\gamma_i(x_t)) \\
+	&= C_{I_t} + \alpha\gamma_{I_t}(x_t) - (C_{i^\star_t} + \alpha\gamma_{i^\star_t}(x_t)) \\
+	&= C_{I_t} - C_{i^\star_t} + \alpha(\gamma_{I_t}(x_t) - \gamma_{i^\star_t}(x_t)) \\
+%	&\le C_{I_t} - C_{i^\star} + \alpha\mathbb{P}\{\widehat{Y}_{I_t}^t \neq \widehat{Y}_{i^\star}^t|x_t\} 
+	% &\le C_{I_t} - C_{i^\star} + \alpha x_{t, a}^\top \theta^* \text{ using linear assumption}
+	\end{align*}
+where $i_t^\star$ is the best arm in round $t$. Two possibilities arises: $I_t > i_t^\star$ or $I_t \leq i_t^\star$. First consider the case $i^\star_t > I_t$. From the previous lemma we have
+	\begin{align*}
+	r_t &= C_{I_t} - C_{i^\star_t} + \alpha(\gamma_{I_t}(x_t) - \gamma_{i^\star_t}(x_t)) \\
+	&\le  -\alpha\langle\,x_{I_i,i^\star}^t,\widehat{\theta}_t\rangle + \alpha \beta_t||x_{I_t, i^\star}^t||_{\overline{V}^-_t} + \alpha \Pr\{Y^{I_t}\neq Y^{i^\star_t}|X=x_t\} \mbox{     from (\ref{eqn:SelectionCriteria}) and (\ref{eqn:disagree1})}\\ 
+	&= \alpha(\langle\,x_{I_i,i^\star}^t, \theta^\star-\widehat{\theta}_t\rangle  + \alpha \beta_t||x_{I_t, i^\star}^t||_{\overline{V}^-_t} \\
+	&\le \alpha \beta_t||x_{I_t, i^\star}^t||_{\overline{V}^-_t} + \alpha \beta_t||x_{I_t, i^\star}^t||_{\overline{V}^-_t} \text{ from lemma~\ref{lem:diff}}\\
+	&= 2\alpha \beta_t||x_{I_t, i^\star}^t||_{\overline{V}^-_t}
+	\end{align*}
+Now consider the case 	$i^\star_t \leq I_t$. Using Equation \ref{eqn:disagree2} we get
+\begin{align*}
+r_t &= C_{I_t} - C_{i^\star_t} + \alpha(\gamma_{I_t}(x_t) - \gamma_{i^\star_t}(x_t)) \\
+&=C_{I_t} - C_{i^\star_t} - \alpha\Pr\{Y^{I_t}_t \neq Y^{i^\star_t}_t| X=x_t\} + 2\alpha\Pr\{Y_{t}^{I_t} \neq Y_t,Y^{ i^\star_t}_t =Y_t| X=x_t \}\\
+& \le \alpha \langle\,x_{I_t,i^\star_t},\widehat{\theta}_t\rangle + \alpha \beta_t||x_{I_t, i^\star}^t||_{\overline{V}^-_t} -\alpha\langle\,x_{I_i,i^\star}^t, \theta^\star\rangle + 2\alpha\Pr\{Y_{t}^{I_t} \neq Y_t,Y^{ i^\star_t}_t =Y_t| X=x_t \}\\
+& \le \alpha \langle\,x_{I_t,i^\star_t},\widehat{\theta}_t-\theta^\star\rangle + \alpha \beta_t||x_{I_t, i^\star}^t||_{\overline{V}^-_t} + 2\alpha\Pr\{Y_{t}^{I_t} \neq Y_t,Y^{ i^\star_t}_t =Y_t| X=x_t \}\\
+& \le 2\alpha \beta_t||x_{I_t, i^\star}^t||_{\overline{V}^-_t} + 2\alpha\Pr\{Y_{t}^{I_t} \neq Y_t,Y^{ i^\star_t}_t =Y_t| X=x_t \}
+\end{align*}
+	\colorbox{red}{
+		How to get rid of the second term here?}
+\end{proof}
+
+
+\subsubsection{Cumulative Regret}
+\label{sec:ra_cr}
+\begin{theorem}
+	\label{thm:cr}
+	The cumulative regret $R_T$ of disagreement model for time horizon $T$ with probability at least $1-\delta$ is:
+	\begin{align*}
+	R_T \le 2\alpha \bigg( R\sqrt{d\log\bigg(1 + \frac{KTL^2}{\lambda d}\bigg) + 2\log\bigg(\frac{1}{\delta}\bigg)} + \lambda^{1/2}S\bigg) \sqrt{2Td\log\bigg(1 + \frac{KTL^2}{\lambda d}\bigg)}
+	\end{align*}
+\end{theorem}
+
+\begin{proof}
+	\begin{align*}
+	R_T &= \sum_{t=1}^T r_t \\
+	&\le \sqrt{T\sum_{t=1}^T r_t^2} \\
+	&\le \sqrt{T\sum_{t=1}^T \left[2\alpha \beta_t||x_{i,j}^t||_{\overline{V}^-}\right]^2} \text{ from theorem~\ref{thm:ir}} \\
+	& \text{ As $\beta_t \le \beta_T$ because $\beta_t$ is not decreasing with $t$ (by definition of $\beta_t$)} \\
+	&\le 2\alpha \beta_T \sqrt{T\sum_{t=1}^T \left[||x_{i,j}^t||_{\overline{V}^-}\right]^2}  \\
+	% \text{ $\beta_t$ is not decreasing with $t$} \\
+	&\le 2\alpha \beta_T \sqrt{T * 2\log\bigg(\frac{det(\overline{V})}{det(\lambda I_d)}\bigg)} \text{ from lemma~\ref{lem:x_norm}} \\
+	% &\le 2\alpha \beta_T \sqrt{2T\log\bigg(1 + \frac{tKL^2}{\lambda d}\bigg)^d} \text{ from lemma~\ref{lem:det_trc}} \\
+	&\le 2\alpha \beta_T \sqrt{2Td\log\bigg(1 + \frac{tKL^2}{\lambda d}\bigg)}  \text{ from lemma~\ref{lem:det_trc}} \\
+	&\le 2\alpha \beta_T \sqrt{2Td\log\bigg(1 + \frac{KTL^2}{\lambda d}\bigg)}   \text{ as } t \le T \\
+	& \text{Now using value of $\beta_T$ and lemma~\ref{lem:det_trc}} \\
+	% &\le 2\alpha \bigg(R \sqrt{2\log\bigg(\frac{det(\overline{V}_T)^{1/2}det(\lambda I_d)^{-1/2}}{\delta}\bigg)} + \lambda^{1/2}S\bigg) \sqrt{2Td\log\bigg(1 + \frac{TL^2}{\lambda d}\bigg)} \\
+	% &  \text{ Using estimate for determinate of matrix i.e. $det(\overline{V}_t)$ from lemma~\ref{lem:det_trc}}\\
+	&\le 2\alpha \bigg( R\sqrt{d\log\bigg(1 + \frac{KTL^2}{\lambda d}\bigg) + 2\log\bigg(\frac{1}{\delta}\bigg)} + \lambda^{1/2}S\bigg) \sqrt{2Td\log\bigg(1 + \frac{KTL^2}{\lambda d}\bigg)}
+	\end{align*}
+\end{proof}
+\vspace{-0.8cm}
+%\subsubsection{Commutative Regret - Special Case}
+%\label{sec:ra_crs}
+%\begin{corollary}
+%	If  $A_{I_t} = \frac{1}{t}\sum_{s=1}^{t}I_s$ is estimated then using lemma~\ref{lem:tight_det_trc} and theorem~\ref{thm:cr}, the commutative regret $R_T$ of disagreement model for time horizon $T$ with probability at least $1-\delta$ is:
+%	\begin{align*}
+%	R_T \le 2\alpha \bigg( R\sqrt{d\log\bigg(1 + \frac{A_{I_t}TL^2}{\lambda d}\bigg) + 2\log\bigg(\frac{1}{\delta}\bigg)} + \lambda^{1/2}S\bigg) \sqrt{2Td\log\bigg(1 + \frac{A_{I_t}TL^2}{\lambda d}\bigg)}
+%	\end{align*}
+%\end{corollary}
+%
+%\subsection{Difficulties with Linear Disagreement Model} 
+%The samples for which two sensors disagree are linearly inseparable. Before using above model, one should come up with suitable feature map $\Psi_{ij}(x)$  for given sensors $i, j$ and context $x$. 
+%\\
+%\textcolor{red}{Add figures to show above claim, if possible, prove it}

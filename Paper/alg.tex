@@ -1,0 +1,65 @@
+%!TEX root =  main.tex
+%\subsection{Algorithm for Weak Dominance}
+%\vspace{-4pt}
+Define for any $i\neq j, \gamma_{ij}\doteq \Pr\{Y^i\neq Y^j\}$ and $\Delta_{ij}=C_j-C_i -\gamma_{ij}$. Our key insight for developing the algorithm is based on the fact that (see Def. 3),
+under WD property, the set $\{i \in [K]: \min_{j> i}\Delta_{ij}\geq 0\}$ includes the optimal arm. We use this idea in Algorithm \ref{alg:UCB} to identify the optimal arm when an instance of USS satisfies WD. 
+
+\begin{center}
+\begin{minipage}{0.48\textwidth}
+		\begin{algorithm}[H]
+			\caption{Algorithm for USS with WD property} %ALG1}
+			\label{alg:UCB}
+			\begin{algorithmic}[1]
+				\State Play action $K$ and observe $Y^1,\dots,Y^K$
+				\State Set $\hgamma_{ij}(1) \set \one{Y^i\ne Y^j}$ for all $i< j$
+				\State $n_i(1)\leftarrow \one{i=K} \; \forall i\in [K]$
+				\For{$t=2,3,...$}
+				\State $U_{ij}(t))\leftarrow\hgamma_{ij}(t-1) + \sqrt{\frac{1.5\log(t)}{n_j(t-1)}}$  for all $i< j$ \label{algo:UCB}
+				\State $L_{ij}(t)\leftarrow\hgamma_{ij}(t-1) - \sqrt{\frac{1.5\log(t)}{n_j(t-1)}}$  for all $i< j$ \label{algo:LCB}
+				\State $\hat{\Delta}_{ij}(t))\leftarrow C_j-C_i-L_{ij}(t)$ for all $i< j$
+				\State $A_t \leftarrow \left \{i \in [K]:\displaystyle \min_{j> i}\hat{\Delta}_{ij}(t)\geq 0 \right\}$ \label{algo:sort}
+				\State Set $\hat{I}_t\leftarrow \arg \min A_t\cup \{K\} $
+				\State $B_t \leftarrow \left\{i>\hat{I}_t: C_i- C_{\hat{I}_t}-U_{\hat{I}_t i}^t \leq 0\right \}$
+				\State $I_t\leftarrow \arg\min B_t\cup \{\hat{I}_t\}$
+				\State Play $I_t$ and observe $Y^1,\dots,Y^{I_t}$.
+				 \For {$i=1,\ldots, I_t-1$}
+				 \State $n_i(t) \set n_i(t-1)+1$
+				  \For {$j=i+1, \ldots, I_t$}
+				 \State \hspace{-1cm}$\hgamma_{ij}(t) \set \left (1-\frac{1}{n_j(t)}\right )
+				 \hgamma_{ij}(t-1) + \frac{1}{n_j(t)} \,\one{Y^j\ne Y^i}$ 
+				\EndFor
+				\EndFor
+				\EndFor
+			\end{algorithmic}
+		\end{algorithm}
+	\end{minipage}
+\end{center}
+
+%
+%Hence, we can express marginal error between sensors, $i,\,j$ as the difference between disagreements of sensors $i$ \& $1$, and sensors $j$ \& $1$. Under WD marginal error is only a lower bound on disagreement and so .   
+%\todov{need to present a lower bound for reduction} 
+%%when tests satisfy SD property, it can fail under WD (see Sec.~\ref{sec:Experiments}). 
+%Our key insight is based on the fact that,
+%%For any suboptimal arm $j < i^*$,  $C_{i^*}-C_j \leq \P\{Y^{i^*} \neq Y^j\}$ holds, and when the WD property holds, we further have $C_j -C_{i^*} \geq \P\{Y^i \neq Y^j\}$ for all $j>i^*$. 
+%under WD, for a given set of the disagreement probabilities, for all $i \neq j$, the set $\{i \in [K-1]: C_j - C_i \geq \Pr\{Y^i \neq Y^j\} \mbox{ for all } j>i\}$ includes the optimal arm. We use this idea in Algorithm \ref{alg:UCB} to identify the optimal arm when an instance of USS satisfies WD. We will experimentally validate its performance on real datasets in the next section.
+%The algorithm works as follows. It keeps track of $\hgamma^t_{ij}$ for all $i,j \in [K]$ and $i\neq j$ in each round, where $\hgamma_{ij}$ is an estimate of the probability $\P\{Y^i \neq Y^j\}$. In the first round, the algorithm plays arm $K$ and initializes its values. In each subsequent round, the algorithm computes the upper confidence value of $\hgamma^t_{ij}$ denoted as $U^t_{ij}$ (\ref{algo:UCB}) for all pairs $(i,j)$ and orders the arms: $i$ is considered better than arm $j$ if $C_j-C_i \geq U^t_{ij}$. Specifically, the algorithm plays an arm $i$ that satisfies $C_j-C_i \geq U^t_{ij}$ for all $j>i$ \ref{algo:sort}. If no such arm is found, then it plays arm $K$.  $n_j(t), j\in [K] $ counts the total number of observation of pairs $(Y^i, Y^j)$, for all $i<j$, till round $t$ and uses it to update the estimates $\hgamma_{ij}^t$ (\ref{algo:Update}).    % \rodos{Should we mention that due to lack of uniform learnability we do not present theoretical results here}
+%=======
+%The algorithm works as follows. It keeps track of $\hgamma^t_{ij}$ for all $i,j \in [K]$ and $i\neq j$ in each round, where $\hgamma_{ij}$ is an estimate of the probability $\P\{Y^i \neq Y^j\}$. In the first round, the algorithm plays arm $K$ and initializes its values. In each subsequent round, the algorithm computes the upper confidence value of $\hgamma^t_{ij}$ denoted as $U^t_{ij}$ (\ref{algo:UCB}) for all pairs $(i,j)$ and orders the arms: $i$ is considered better than arm $j$ if $C_j-C_i \geq U^t_{ij}$. Specifically, the algorithm plays an arm $i$ that satisfies $C_j-C_i \geq U^t_{ij}$ for all $j>i$ \ref{algo:sort}. If no such arm is found, then it plays arm $K$.  $n_j(t), j\in [K] $ counts the total number of observation of pairs $(Y^i, Y^j)$, for all $i<j$, till round $t$ and uses it to update the estimates $\hgamma_{ij}^t$ (\ref{algo:Update}).     \todov{Should we mention that due to lack of uniform learnability we do not present theoretical results here}
+
+The algorithm works as follows. In each round, $t$, based on history, we keep track of estimates, $\hgamma_{ij}(t)$, of disagreements between sensor $i$ and sensor $j$.  %for all $i,j \in [K]$ and $i\neq j$ in each round, where $\hgamma_{ij}$ is an estimate of the probability $\P\{Y^i \neq Y^j\}$. 
+In the first round, the algorithm plays arm $K$ and initializes its values. In each subsequent round, the algorithm computes the upper confidence value of $\hgamma_{ij}(t)$ denoted as $U_{ij}(t)$ (\ref{algo:UCB}) for all pairs $(i,j)$ and orders the arms: $i$ is considered better than arm $j$ if $C_j-C_i \geq U_{ij}(t)$. Specifically, the algorithm plays an arm $i$ that satisfies $C_j-C_i \geq U_{ij}(t)$ for all $j>i$ (\ref{algo:sort}). If no such arm is found, then it plays arm $K$.  $n_j(t), j\in [K] $ counts the total number of observation of pairs $(Y^i, Y^j)$, for all $i<j$, till round $t$ and uses it to update the estimates $\hgamma_{ij}(t)$ (\ref{algo:Update}).%However, note that due to the lack of uniform learnability under WD we cannot obtain a finite-time characterization and so omit these parallel results due to space limitations. 
+%\vspace{-5pt}
+%\subsection{USS with Contextual Information } 
+%In this section we consider the case where contextual information associated with the instances are revealed in each round.  Let $\mathcal{X}\subset \mathbb{R}^D$ denote the set of contexts. For any cost vector $c$, the problem instance is specified by the pair $\bar{\theta}=(\bar{P},c)$, where $\bar{P}$ is a joint distribution over the set $\mathcal{X}\times\{0,1\}^{K+1}$. Specifically, $\bar{P}=P_{X}\otimes P_{Y|X}$, where $P_X$ is the distribution over $\mathcal{X}$ and $P_{Y|X}$ is the conditional distribution over $K+1$ binary vector given $X$. As earlier, we assume that $c$ is known and $\bar{P}$  is unknown, and we identify the problem instance $\bar{\theta}$ by $\bar{P}$. The learner-environment interaction is as follows: In  round $t=1,2,\ldots$, environment draws an independent sample  $Z_t=(X_t, Y_t, Y_t^1, \cdots,Y_t^K)$ distributed according to $\bar{P}$. The Learner observers $X_t$ and chooses index $I_t \in [K]$ upon which it further observers output of first $I_t$ sensors, i.e., $(Y_t^1, Y_t^2, \cdots, Y_t^{I_t})$. $Y_t$ is hidden and never observed.  Prediction accuracy of each sensor depends on the context. For sensor $k$ it is given by  $\bar{\gamma}: \mathcal{X}\rightarrow [0\;1]$ such that $\bar{\gamma}_k(x)=\bar{\gamma}_k(\bar{\theta},x)\doteq\Pr\{Y_t \neq Y | x\}$ for all $x\in \mathcal{X}$. We assume that sensors in the cascade are arranged in decreasing order of their prediction accuracy and this ordering is preserved for all contexts almost surely. Total cost incurred by the learner in round $t$ is thus $C_{I_t}+\ind{Y_t\neq Y_t^{I_t}|X_t}$. Let $\mu_k(x)\doteq \mu(\bar{\theta},x)=\mathbb{E}[C_k +\ind{Y_t\neq Y^{k}|x}]=C_k + \bar{\gamma}_k(x)$ denote the mean cost of action $k$ when the context is $x$. Let $\pi: \mathcal{X}\rightarrow [K]$ denote a policy that specifies action taken for each context, and let $\Pi$ denote the collection of all such policies. Given the values $\bar{\gamma}_k(\cdot)$ for all $k \in [K]$, let
+%$\pi^*\in \arg\min_{\pi \in \Pi} \mathbb{E}_{X \sim P_X}[C_{\pi(X)}+\bar{\gamma}_{\pi(X)}(X)]$ denote an optimal policy. The learner's goal is to learn a policy that competes with $\pi^*$. For any sequence of policies $\{\pi_t\}_{t\geq 1}$ where $\pi_t$ is the policy applied in round $t$, we define expected regret over time period $T$ as $\Regret_T(\bar{\theta})=\sum_{t=1}^T \mathbb{E}[\mu_{\pi_t(X)}(X)]- T\mathbb{E}[\mu_{\pi^*(X)}(X)]$
+%
+%
+% For any $i\neq j$,  let $\bar{\gamma}_{ij}(x) \triangleq \Pr(Y^{i} \neq Y^{j}\mid x)$ denote probability that predictions of sensors $i$ and $j$ disagree on context $x$. We assume that this disagreement probability can be expressed as $\bar{\gamma}_{ij}(x)=\xi'f_{ij}(x)$, where $\xi \in \mathbb{R}^{d^\prime}$ is unknown parameter and $f_{ij}: \mathcal{X}\rightarrow \mathbb{R}^d$ is a fixed mapping that extracts the relevant features from each context that influence the disagreement rate of sensors $i,j$ .  More generally, we can assume that the disagreement probabilities can be expressed as a generalized linear model (GLM) as follows. For all $i\neq j$,  $\bar{\gamma}_{ij}(x)=F(\xi'f_{ij}(x))$, where $F(\cdot)$ is a non-negative real valued function.
+% 
+% 
+% {Old Model:} when the log-odds ratio $\log \frac{\gamma_{ij}(x)}{1-\gamma_{ij}(x)}$ can be written as $\theta_{ij}'x$ for some unknown $\theta_{ij} \in \mathbb{R}^{d^\prime}$.
+% 
+% \subsection{Algorithm}
+%\vspace{-5pt}
+%%  \todov{Should we mention that due to lack of uniform learnability we do not present theoretical results here}
+%

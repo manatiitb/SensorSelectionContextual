@@ -1,0 +1,176 @@
+%!TEX root =  main.tex
+%The sensors are differentiated in terms of their prediction efficiency and cost. 
+\newcommand{\ind}[1]{\mathbb{I}\{#1\}}
+%
+%\todoc[inline]{I compressed the problem spec. We don't want the reader to get bored.}
+\vspace{-5pt}
+\noindent
+{\bf Preliminaries and Notation:} 
+The set of real numbers is denoted by $\R$. For positive integer $n$, we let
+$[n] = \{1,\dots,n\}$. % with $[n]=\emptyset$ if $n=0$.
+We let $M_1(\X)$ to denote the set of probability distributions over some set $\X$.
+When $\X$ is finite with a cardinality of $d \doteq |\X|$, 
+$M_1(\X)$ denotes the $d$-dimensional probability simplex.
+
+We first consider the {\it unsupervised, stochastic, 
+cascaded sensor selection} problem ignoring any side information. We cast it as a special case of stochastic partial monitoring problem (SPM).
+We will then study the case when side information is available through context. %sensor selection. 
+%\todoc{I added stochastic and cascaded. Later we may want to consider alternatives,
+%thus it will be useful to have these so that we can distinguish between the problem defined here and those
+%future alternatives.}
+Formally, 
+a problem instance is specified by a pair $\theta = (P,c)$, where $P$ is
+a distribution over the $K+1$ dimensional hypercube, and $c$ is a $K$-dimensional, nonnegative valued vector
+of costs.
+While $c$ is known to the learner from the start, $P$ is initially unknown. Henceforth we identify problem instance $\theta$ by $P$. 
+%only as $c$ is assumed to fixed and known. 
+The instance parameters specify the learner-environment interaction as follows:
+In each round for $t=1,2,\dots$, 
+the environment generates a $K+1$-dimensional binary vector
+$Y = (Y_t,Y_t^1,\dots,Y_t^K)$ chosen at random from $P$.
+Here, $Y_t^i$ is the output of sensor $i$, while $Y_t$ is a (hidden) label to be guessed by the learner.
+Simultaneously, the learner chooses an index $I_t\in [K]$ and observes the sensor outputs $Y_t^1,\dots,Y_t^{I_t}$, i.e., the learner goes through the first $I_t$ sensors and observes their output.
+The sensors are known to be ordered from least accurate to most accurate, 
+i.e., $\gamma_k\doteq\gamma_k(\theta) \doteq \Prob{Y_t\ne Y_t^k}$ is decreasing with $k$ increasing.
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.4]{../Figures/Cascade.pdf}
+	\caption{\footnotesize Cascaded Unsupervised Sequential Sensor Selection. $Y_t$ is the hidden state of the instance and $Y_t^1, Y_t^2 \ldots$ are test outputs. Not shown are features that a sensor could process to produce the output.}
+	\label{fig:SensorCascade}
+	\vspace{-.2cm}
+\end{figure} 
+\todom{How about this figure and caption?}
+Knowing this, the learner's choice of $I_t$ also indicates that he/she chooses $I_t$ to predict the unknown label $Y_t$.
+Observing sensors is costly: The cost of choosing $I_t$ is $C_{I_t} \doteq c_1 + \dots + c_{I_t}$.
+The total cost suffered by the learner in round $t$ is thus $C_{I_t} + \ind{Y_t \ne Y_t^{I_t}}$.
+The goal of the learner is to compete with the best choice given the hindsight of the values $(\gamma_k)_k$.
+Let $c(k,\theta) = \EE{ C_{k} +\ind{Y_t \ne Y_t^{k} }}  (= C_k + \gamma_k)$ and $c^*(\theta) = \min_k c(k,\theta)$. The expected regret of learner up to the end of round $T$ is 
+$\Regret_T(\theta) =( \sum_{t=1}^T \EE{ c(I_t,\theta) }) - T c^*(\theta)$. The parameter $\theta$ determines $\gamma_k$ for all $k\in [K]$. Henceforth we use $\theta$ and vector $\gamma\doteq (\gamma_k)_k$ interchangeably.
+
+\noindent
+{\bf Sublinear Regret:} The quantification of the learning speed is given by the expected regret 
+$\Regret_T$, which, for brevity and when it does not cause confusion, 
+we will just call regret. A sublinear expected regret, i.e., $\Regret_T/T \to 0$ as $T\to \infty$ means that the learner in the long run collects almost as much reward on expectation as if the optimal action was known to it.
+
+\noindent
+In the following we denote the optimal action as $a^*(\theta)$.
+
+
+%In what follows, we let $a^*(\theta)$ denote the optimal action that has the smallest index
+%\footnote{Note that even if $i<j$ are optimal actions, there can be suboptimal actions in the interval $[i,j] (=[i,j]\cap \N)$
+%(e.g., $\gamma_1=0.3$, $C_1=0$, $\gamma_2=0.25$, $C_2=0.1$, $\gamma_3=0$, $C_3=0.3$.}.
+%
+%\begin{equation} \label{eqn:interp_opt}
+%\vspace{-5pt}
+%\underbrace{C_j - C_i}_{\text{Marginal Cost}} \geq \underbrace{ E \left [ \ind{Y_t \ne Y_t^i} - \ind{Y_t \ne Y_t^j} \right ]}_{\text{Marginal Error $= \gamma_i-\gamma_j$}}.
+%\end{equation}
+
+
+\if0
+A learner has access to $K\geq 2$ sensors that provide predictions
+of an unknown label. 
+ It is assumed that the sensors form a cascade (cf. \cref{wrap-fig:1}),
+i.e., they are  \emph{ordered} in terms of their prediction efficiency,
+later sensors are more accurate in predicting the unknown label.
+However, acquiring the output of later sensor comes at a fixed cost.
+The dilemma of the learner is that while he knows the ordering of the sensors,
+the accuracies of the sensors are unknown.
+The learner's task is to minimize the total prediction cost, which includes
+both the cost of acquiring the sensor outputs and the cost incurred due to imperfect
+sensor output.
+The learner knows the costs, but does not know how efficient the sensors are
+and learns only the output of the sensors.
+Learning happens in a sequential setting, where in each round the learner can decide
+sequentially (within the round) which sensor outputs to observe,
+while respecting the ordering of the sensors.
+The output of the last sensor selected serves as the prediction for the round.
+
+The formal specification of the learning problem is as follows:
+Learning happens sequentially.
+In round $t$ ($t=1,2,\dots$), 
+the environment generates 
+$(Y_t,\hY_t^1,\dots,\hY_t^K)\in \{0,1\}^{K+1}$ from a distribution $P$ unknown to the learner.
+
+Here, $Y_t$ is the unknown label of context/instance $Z_t$ to be predicted in round $t$, while $\hY_t^k$ is the output of sensor
+$k$, a prediction of $Y_t$. We focus on the case where $Z_t$ is not available to the learner. The case where they are observed is briefly discussed in the supplementary. 
+At the cost of $c_1+ c_2 + \dots + c_k$,
+the learner can choose to acquire the outputs of the first $k$ sensors,
+where $k\in [K] := \{1,\dots,K\}$. 
+
+Here, $c_i\ge 0$ is the marginal cost of acquiring the output of sensor $i$.
+The costs $c := (c_1,\dots,c_K)$ are known to the learner.
+Having acquired the output of the first $k$ sensors, the learner predicts the unknown label $Y_t$ using
+the output of the last sensor acquired, i.e., using $\hY_t^k$, making the learner incur the loss
+\begin{align*}
+L_t(k)=\mathbf{1}_{\{\hat{Y}^k_t\neq Y_t\}}+\sum_{j=1}^k c_j\,
+\end{align*}
+in round $t$.
+The feedback of learner for this round is then $H_t(k)=(\hat{Y}^1_t,\ldots,\hat{Y}^k_t)$.
+
+%Let $\{Z_t, Y_t\}_{{t>0}}$ denote a sequence generated according to an unknown distribution. $Z_t \in\mathcal{C} \subset  \mathcal{R}^d$, where $\mathcal{C}$ is a compact set, denotes a feature vector/context at time $t$ and $Y_t \in \{0,1\}$ its binary label. We denote output/prediction of the $i^{th}$ sensor as $\hat{Y}^i_t$ when its input is $Z_t$. The set of actions available to the learner is $\mathcal{A}=\{1,\ldots, K\}$, where  the action $k \in \mathcal{A}$ indicates acquiring predictions from sensors $1,\ldots, k$ and classifying using the prediction $\hat{Y}^k_t$. 
+
+
+\begin{wrapfigure}{r}{5cm}
+	\vspace{-.5cm}
+	\centering
+	\includegraphics[scale=.6]{../Figures/cascade.pdf}
+	\caption{Cascade of sensors
+	}\label{wrap-fig:1}
+	\vspace{-.5cm}
+\end{wrapfigure} 
+
+\if0
+The prediction error rate of the $i^{th}$ sensor is denoted as $\gamma_i:=\Pr\{Y_t\neq \hat{Y}^k_t\}$. The learner incurs an extra cost of $c_k\geq 0$ to acquire output of sensor $k$ after acquiring output of sensor $k-1$. The sensor cascade is depicted in the adjacent figure. In this section we assume that the error rate does not depend on the  context, and the treatment with contextual information is given in the supplementary. 
+\fi
+
+%Let $H_t(k)$ denote the feedback observed in round $t$ from action $k$. Since we observe predictions of all the first $k$ senors by playing action $k$, we get   $H_t(k)=(\hat{Y}^1_t,\ldots,\hat{Y}^k_t)$.
+%The loss incurred in each round is defined in terms of the prediction error and the total cost involved. When the learner selects action $k$, loss is the prediction error of sensor $k$ plus sum of the costs incurred along the path ($c_1,\ldots,c_k$). Let $L_t: \mathcal{A}\rightarrow \mathcal{R}_+$ denote the loss function in round $t$. Then,
+%\begin{equation}
+%L_t(k)=\mathbf{1}_{\{\hat{Y}^k_t\neq Y_t\}}+\sum_{j=1}^k c_j.
+%\end{equation} 
+We refer to the above setup as Sensor Acquisition Problem (SAP).
+Based on the previous description, an instance of SAP is the tuple $\psi = (K,P,c)$, where $K\in \mathbb{N}$, $K\ge 2$,
+$P$ is a distribution over $\{0,1\}^{K+1}$ and $c\in [0,\infty)^K$. 
+ A policy $\pi$ on a $K$-sensor SAP problem
+ is a sequence of maps, $(\pi_1, \pi_2, \cdots)$, where
+ $\pi_t : \mathcal{H}_{t-1}\rightarrow [K]$ gives the action selected in round $t$
+ given a history $h_{t-1}\in \mathcal{H}_{t-1}$ that consists of all actions and corresponding feedback observed before $t$. 
+ Let $\Pi$ denote set of such policies. 
+ For any $\pi \in \Pi$, we compare its performance to that of the single best action in hindsight 
+ and define its expected regret as follows
+\begin{equation}
+R^\psi_T(\pi)= \mathbb{E}\left[\sum_{t=1}^T L_t(I_t)\right]-\min_{k\in A}\mathbb{E}\left[\sum_{t=1}^T L_t(k)\right],
+\end{equation}
+where $I_t$ denotes the action selected by $\pi_t$ in round $t$.
+
+The goal of the learner is to learn a policy that minimizes the expected total loss, or, equivalently, to minimize the expected regret, i.e.,
+\begin{equation}
+\pi^*= \arg \min_{\pi \in \Pi } R^\psi_T(\pi).
+\end{equation}
+
+\noindent
+{\bf Optimal action in hindsight: } For any $t$, we have 
+\begin{equation}
+\label{eqn:OptimalAction}
+\mathbb{E}[L_t(k)]=\Pr\{Y_t\neq \hat{Y}^k_t\}+\sum_{j=1}^kc_j=\gamma_k +C_k\,,
+\end{equation}
+where $\gamma_k:=\Pr\{Y_t\neq \hat{Y}^k_t\}$ is the misclassification error rate of sensor $k$ and $C_k := c_1+\dots+c_k$ denotes the total cost for selecting the first $k$ sensors.
+Since $c$ is assumed to be known, we will denote the dependence of the various quantities below
+on $\gamma = (\gamma_1,\dots,\gamma_K)$ only.
+Denote the expected cost of choosing action $k$ by $l_k(\gamma) = \gamma_k + C_k$. Let $k^* = \arg\min_{k\in [K]} l_k(\gamma)$ be the optimal action and let 
+$\Delta_k(\gamma) = l_k(\gamma) - c^*(\gamma)$ be the expected excess cost of using action $k$.
+
+The optimal policy is to play action $k^*$ in each round. If an action $i$ is played in any round then it adds $\Delta_i(\gamma)$ to the expected regret. 
+Let $N_k(s)$ denote the number of times action $k$ 
+is selected till time $s$, i.e., $N_k(s)=\sum_{t=1}^s \boldsymbol{1}_{\{I_t=k\}}$. 
+Then the expected regret can be expressed as
+\begin{eqnarray}
+\label{eqn:ExpRegretGap}
+<<<<<<< HEAD
+R^\psi_T(\pi)&=& \sum_{k \in [K]}\mathbb{E}[N_k(T)]\Delta_k(\gamma)\,.
+\end{eqnarray}
+=======
+R^\psi_T(\pi)&=& \sum_{k \in [K]}\mathbb{E}[N_k(T)]\Delta_k\,.
+\end{eqnarray}\
+\fi
+
