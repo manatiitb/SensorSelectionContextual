@@ -1,0 +1,19 @@
+Statistics for BSC dataset
+
+1. Error rate of each classifier
+
+2. probability that cheap sensor is correct and costly one is incorrect (for each pair):
+
+3. probability that cheap and costly sensors disagree (for each pair):
+
+0.400
+0.100
+0.050
+,,
+0.000,0.000,0.000
+0.060,0.000,0.000
+0.030,0.045,0.000
+,,
+0.000,0.000,0.000
+0.420,0.000,0.000
+0.410,0.140,0.000
